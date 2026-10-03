@@ -336,3 +336,61 @@ select:focus-visible { outline: 3px solid #759f39; outline-offset: 3px; }
   .focused-result .waiting-title { font-size: 27px; }
   .secondary-proof { align-items: flex-start; flex-direction: column; gap: 5px; }
 }
+
+/* A merchant order, not a gallery of scenarios. */
+.focused-main { max-width: 1160px; }
+.focused-intro { margin-top: 0; margin-bottom: 18px; }
+.mode-actions { margin-bottom: 20px; }
+.transaction-flow { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); margin-bottom: 12px; }
+.transaction-flow > span { display: flex; flex-direction: column; gap: 4px; }
+.transaction-flow b { font-size: 13px; font-weight: 550; }
+.transaction-flow small { color: #718069; font-size: 11px; }
+.transaction-flow i { font-style: normal; color: #819b63; font-size: 24px; }
+.flow-active i { animation: flow-forward 2s ease-in-out infinite; }
+@keyframes flow-forward { 50% { transform: translateX(5px); color: var(--green); } }
+.order-workspace { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; margin-bottom: 16px; }
+.order-card { padding: 20px 22px; border: 1px solid #d6dfce; border-radius: 14px; background: #fff; box-shadow: 0 8px 30px #193e2e07; }
+.order-card header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.order-status { font-size: 10px; font-weight: 600; padding: 6px 8px; border-radius: 5px; color: #496840; background: #edf4e5; text-align: right; }
+.order-status[data-verdict="ASK"] { color: #84622b; background: #fcf2dd; }
+.order-status[data-verdict="HOLD"] { color: #526782; background: #edf2fb; }
+.order-status[data-verdict="BLOCK"] { color: #974c3d; background: #fff0ed; }
+.placed-by { font-size: 11px; color: #75846d; margin: 8px 0 16px; }
+.order-card h2 { font-size: 20px; letter-spacing: -.5px; margin: 6px 0; }
+.order-card .context-intent p { font-size: 12px; line-height: 1.7; color: #677760; }
+.order-facts { display: grid; grid-template-columns: .8fr 1.4fr .8fr; gap: 12px; margin: 18px 0; }
+.order-facts dt { font-size: 11px; color: #7a8671; margin-bottom: 4px; }
+.order-facts dd { font-size: 13px; font-weight: 550; }
+.order-items { display: flex; flex-direction: column; gap: 5px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; color: #506647; }
+.order-outcome { font-size: 12px; font-weight: 550; color: var(--green); padding-top: 12px; }
+.order-arriving { animation: order-arrive .8s ease-out; }
+@keyframes order-arrive { from { opacity: .25; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+.merchant-event { display: flex; flex-direction: column; justify-content: center; padding: 20px; min-width: 0; }
+.event-content { animation: verdict-enter .4s ease-out; margin-top: 14px; }
+.event-tag { font-size: 10px; letter-spacing: 1px; color: #8a6b32; }
+.merchant-event h2 { font-size: 21px; letter-spacing: -.5px; margin: 12px 0; }
+.merchant-event p { font-size: 13px; line-height: 1.7; color: #66785d; }
+.merchant-event .focused-change { font-size: 25px; color: var(--green); font-weight: 550; }
+.merchant-event small { font-size: 12px; display: block; margin-top: 12px; color: #73846a; line-height: 1.7; }
+.pause-note { margin-top: 16px; font-weight: 600; }
+.is-paused * { animation-play-state: paused; }
+.focused-result { min-height: 180px; }
+.firewall-evaluating { box-shadow: 0 0 0 3px #d7f58b55; transition: box-shadow .3s; }
+.intelligence-checks { list-style: none; display: flex; flex-wrap: wrap; gap: 7px 16px; padding: 12px 0 0; margin-top: 12px; border-top: 1px solid #ffffff20; color: #cad9c0; font-size: 11px; line-height: 1.6; }
+.intelligence-checks li::before { content: "·"; color: var(--lime); margin-right: 7px; }
+.approval-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.approval-comparison p { font-size: 12px; color: #66775c; line-height: 1.7; margin-top: 8px; }
+@media (max-width: 650px) {
+  .transaction-flow { gap: 8px; align-items: flex-start; }
+  .transaction-flow b { font-size: 11px; }
+  .transaction-flow small { font-size: 10px; line-height: 1.5; }
+  .transaction-flow i { font-size: 18px; }
+  .order-workspace { grid-template-columns: 1fr; gap: 0; }
+  .order-card { padding: 18px; }
+  .order-card header { align-items: flex-start; }
+  .order-status { max-width: 160px; line-height: 1.6; }
+  .merchant-event { padding: 18px 4px; }
+  .merchant-event h2 { font-size: 19px; }
+  .merchant-event .focused-change { font-size: 22px; }
+  .approval-comparison { grid-template-columns: 1fr; gap: 14px; }
+}

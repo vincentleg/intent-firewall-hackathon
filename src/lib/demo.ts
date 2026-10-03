@@ -28,14 +28,14 @@ export function decisionInput(purpose: Purpose, scenario: ScenarioId): DecisionI
     deadline: "12:30 PM", deadlineMeaning: hard ? "hard" : "soft",
     dietaryContext: "No dietary restrictions supplied; do not infer allergies or dietary suitability.",
     preferencesContext: trays ? (deskMeals ? "Each person needs a separate labeled meal to eat at their desk; shared trays require approval." : "The team eats together; shared trays preserve the purpose when the same food and four servings are preserved.") : "Same sparkling water, four usable servings",
-    originalOrderContext: trays ? (deskMeals ? "Four individual Mediterranean bowls, labeled for four recipients, $60 total." : "Four individual Mediterranean bowls for a shared team lunch, exactly four servings, $60 total. Individual packaging and labels are not required.") : "Four sparkling waters, four usable servings, $60 total.",
+    originalOrderContext: trays ? (deskMeals ? "Four individual Mediterranean bowls, labeled for four recipients, $60 total." : "Four individual Mediterranean bowls for a shared team lunch, exactly four servings, $60 total. Individual packaging and labels are not required.") : "Four Mediterranean bowls and four sparkling waters for four people, $60 total.",
   };
   return {
     intent: { ...intent,
       ...(hard ? { hardDeadline: "12:30 PM" } : { preferredDeliveryTime: "12:30 PM" }),
       timingContext: hard ? "Food is needed for a client meeting; late delivery requires customer approval." : "A flexible team lunch; a 15-minute delay is acceptable if the order and budget are preserved.",
     },
-    originalOrder: { ...(trays ? { meal: "Mediterranean bowls", servings: 4, individuallyPackaged: true, separatelyLabeled: deskMeals } : { sparklingWater: { packages: 4, servings: 4 } }), totalPrice: 60, deliveryTime: "12:30 PM", kitchenState: "ready",
+    originalOrder: { ...(trays ? { meal: "Mediterranean bowls", sparklingWater: { packages: 4, servings: 4 }, servings: 4, individuallyPackaged: true, separatelyLabeled: deskMeals } : { meal: "4 Mediterranean bowls", mealServings: 4, sparklingWater: { packages: 4, servings: 4 } }), totalPrice: 60, deliveryTime: "12:30 PM", kitchenState: "ready",
       merchant: { name: "Demo restaurant", evidenceSource: "Simulated merchant scenario; not an authenticated kitchen feed", attributes: trays && !deskMeals ? { verificationState: "verified", cuisine: "Mediterranean", familyTrayServings: 2, sameUnderlyingMeal: true, dietaryCompatibilityUnchanged: true } : { sparklingWaterPackageSizes: [1, 2], twinPackContainsSameProduct: true } },
     },
     proposedChange: trays
