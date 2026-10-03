@@ -4,7 +4,32 @@ export type Verdict = (typeof outcomes)[number];
 export const autoAdaptThreshold = 0.80;
 export type Probabilities = Record<Verdict, number>;
 export type PolicyCheck = { rule: string; status: "passed" | "enforced" | "not_applicable"; detail: string };
+export type IntentRecord = {
+  purpose: string;
+  partySize: number;
+  budget: { maximum: number; currency: "USD" };
+  hardConstraints: {
+    maxTotalPrice: number;
+    minServings: number;
+    requiredProduct?: string;
+    individuallyPackaged?: boolean;
+    separatelyLabeled?: boolean;
+    dietaryRestrictions: string[];
+  };
+  softPreferences: string[];
+  deadline: string;
+  deadlineMeaning: "hard" | "soft";
+  dietaryContext: string;
+  preferencesContext: string;
+  originalOrderContext: string;
+};
 export type Decision = {
+  finalVerdict: Verdict;
+  confidence: number;
+  constraintsPreserved: string[];
+  constraintsAtRisk: string[];
+  verifiedFacts: string[];
+  unverifiedFacts: string[];
   verdict: Verdict;
   policyReason: string;
   instinctVerdict: Verdict;
@@ -12,7 +37,7 @@ export type Decision = {
   policyChecks?: PolicyCheck[];
 };
 export type DecisionInput = {
-  intent: string | Record<string, unknown>;
+  intent: IntentRecord | string | Record<string, unknown>;
   originalOrder: string | Record<string, unknown>;
   proposedChange: string | Record<string, unknown>;
   verificationState: "verified" | "unverified";
@@ -32,6 +57,10 @@ export function isProbabilities(value: unknown): value is Probabilities {
 export function isDecision(value: unknown): value is Decision {
   return isRecord(value) && isVerdict(value.verdict) && isVerdict(value.instinctVerdict)
     && typeof value.policyReason === "string" && isProbabilities(value.probabilities)
+    && value.finalVerdict === value.verdict && typeof value.confidence === "number"
+    && Number.isFinite(value.confidence) && value.confidence >= 0 && value.confidence <= 1
+    && ["constraintsPreserved", "constraintsAtRisk", "verifiedFacts", "unverifiedFacts"].every((key) =>
+      Array.isArray(value[key]) && value[key].every((fact: unknown) => typeof fact === "string"))
     && (value.policyChecks === undefined || (Array.isArray(value.policyChecks) && value.policyChecks.every((check) =>
       isRecord(check) && typeof check.rule === "string" && typeof check.detail === "string"
       && typeof check.status === "string" && ["passed", "enforced", "not_applicable"].includes(check.status),

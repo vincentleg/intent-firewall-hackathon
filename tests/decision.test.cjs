@@ -115,3 +115,37 @@ test("upstream is aborted at the server deadline and on caller cancellation", as
   const controller = new AbortController();controller.abort();
   assert.equal((await POST(new Request("http://localhost/api/decision",{method:"POST",body:JSON.stringify(decisionInput("Client meeting","delay")),signal:controller.signal}))).status,502);
 });
+
+test("semantic serving format depends on explicit customer constraints", () => {
+  const shared = policy(decisionInput("Shared team lunch", "trays"));
+  assert.equal(shared.finalVerdict, "AUTO_ADAPT");
+  assert.equal(shared.confidence, .9);
+  assert.ok(shared.constraintsPreserved.some(fact => fact.includes("4 usable servings")));
+  const desk = policy(decisionInput("Four separately labeled desk meals", "trays"));
+  assert.equal(desk.verdict, "ASK");
+  assert.equal(desk.instinctVerdict, "AUTO_ADAPT");
+  assert.ok(desk.constraintsAtRisk.some(fact => fact.includes("recipient labels")));
+  assert.equal(policy(decisionInput("Shared team lunch", "trays"), "ASK").verdict, "ASK");
+});
+
+test("hard budget, serving and dietary constraints override soft preferences", () => {
+  for (const price of [61, "60", NaN, undefined]) {
+    const input = decisionInput("Shared team lunch", "trays");
+    input.proposedChange.totalPrice = price;
+    assert.equal(policy(input).verdict, "ASK");
+  }
+  const input = decisionInput("Shared team lunch", "trays");
+  input.proposedChange.servings = 3;
+  assert.equal(policy(input).verdict, "ASK");
+  input.proposedChange.servings = 4;
+  input.intent.hardConstraints.dietaryRestrictions = ["vegetarian"];
+  assert.equal(policy(input).verdict, "ASK");
+  input.proposedChange.dietaryRestrictionsPreserved = ["vegetarian"];
+  assert.equal(policy(input).verdict, "AUTO_ADAPT");
+  input.verificationState = "unverified";
+  const result = policy(input);
+  assert.equal(result.verdict, "HOLD");
+  assert.deepEqual(result.verifiedFacts, []);
+  assert.deepEqual(result.constraintsPreserved, []);
+  assert.ok(result.unverifiedFacts.length > 0);
+});

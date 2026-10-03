@@ -47,7 +47,7 @@ h2 { font-size: 13px; font-weight: 600; }
 .scenario-section { margin-top: 25px; }
 .section-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
 .section-heading > span { font-size: 10px; color: #8a9486; }
-.scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.scenario-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .scenario-card { text-align: left; border: 1px solid var(--line); background: #fff9; border-radius: 12px; padding: 16px 18px; transition: border-color .15s, background .15s, transform .15s; }
 .scenario-card:hover { border-color: #8ba771; transform: translateY(-2px); }
 .scenario-card.selected { border-color: #78965d; background: #f0f5e9; box-shadow: inset 0 0 0 1px #78965d; }

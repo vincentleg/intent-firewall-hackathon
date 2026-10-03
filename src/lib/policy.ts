@@ -92,8 +92,57 @@ function hasUnparseableHardDeadline(value: unknown, soft = false): boolean {
   });
 }
 
+// Only explicit structured facts can establish a hard constraint as preserved.
+function constraintEvidence(input: DecisionInput) {
+  const intent: Record<string, unknown> = isRecord(input.intent) ? input.intent : {};
+  const hard = isRecord(intent.hardConstraints) ? intent.hardConstraints : {};
+  const legacy = isRecord(intent.constraints) ? intent.constraints : {};
+  const budget = isRecord(intent.budget) ? intent.budget : {};
+  const original = isRecord(input.originalOrder) ? input.originalOrder : {};
+  const change = isRecord(input.proposedChange) ? input.proposedChange : {};
+  const preserved: string[] = [], atRisk: string[] = [];
+  let budgetRisk = false;
+  const maximum = hard.maxTotalPrice ?? budget.maximum ?? legacy.budgetMaximum;
+  if (maximum !== undefined) {
+    const price = change.totalPrice;
+    if (typeof maximum !== "number" || !Number.isFinite(maximum) || maximum < 0 || typeof price !== "number" || !Number.isFinite(price) || price < 0) {
+      budgetRisk = true; atRisk.push("Hard budget could not be checked");
+    } else if (price > maximum) {
+      budgetRisk = true; atRisk.push(`Total price $${price} exceeds hard budget $${maximum}`);
+    } else preserved.push(`Total price $${price} stays within $${maximum} budget`);
+  }
+  const servings = isRecord(change.sparklingWater) ? change.sparklingWater.servings : change.servings ?? (change.itemsUnchanged === true ? original.servings ?? (isRecord(original.sparklingWater) ? original.sparklingWater.servings : undefined) : undefined);
+  const minimum = hard.minServings ?? legacy.usableServings;
+  if (minimum !== undefined) {
+    if (typeof minimum !== "number" || !Number.isFinite(minimum) || minimum < 1 || typeof servings !== "number" || !Number.isFinite(servings) || servings < minimum) atRisk.push("Required usable servings are reduced or not established");
+    else preserved.push(`${servings} usable servings meet the party's needs`);
+  }
+  for (const [key, label] of [["individuallyPackaged", "Individual meal packaging"], ["separatelyLabeled", "Separate recipient labels"]] as const) {
+    if (hard[key] === true) {
+      const value = change[key] ?? (change.itemsUnchanged === true ? original[key] : undefined);
+      if (value === true) preserved.push(`${label} preserved`);
+      else atRisk.push(`${label} required but ${value === false ? "removed" : "not established"}`);
+    }
+  }
+  if (hard.requiredProduct !== undefined) {
+    if (change.itemsUnchanged === true || (isRecord(change.sparklingWater) && change.sparklingWater.sameProduct === true)) preserved.push("Required product identity preserved");
+    else atRisk.push("Required product identity is not established");
+  }
+  if (Array.isArray(hard.dietaryRestrictions) && hard.dietaryRestrictions.length) {
+    const confirmed = change.dietaryRestrictionsPreserved;
+    for (const restriction of hard.dietaryRestrictions) {
+      if (typeof restriction !== "string") { atRisk.push("Dietary constraint could not be checked"); continue; }
+      if (change.itemsUnchanged === true || (Array.isArray(confirmed) && confirmed.includes(restriction))) preserved.push(`Dietary restriction preserved: ${restriction}`);
+      else atRisk.push(`Dietary restriction not established: ${restriction}`);
+    }
+  }
+  const facts = Array.isArray(change.scenarioFacts) ? change.scenarioFacts.filter((fact): fact is string => typeof fact === "string") : [];
+  return { preserved, atRisk, budgetRisk, facts };
+}
+
 export function applyPolicy(input: DecisionInput, instinctVerdict: Verdict, probabilities: Probabilities): Decision {
   const deadline = deliveryDeadlineStatus(input);
+  const evidence = constraintEvidence(input);
   const verified = input.verificationState === "verified";
   const confident = probabilities.AUTO_ADAPT >= autoAdaptThreshold;
   let verdict = instinctVerdict;
@@ -107,15 +156,27 @@ export function applyPolicy(input: DecisionInput, instinctVerdict: Verdict, prob
   } else if (instinctVerdict === "AUTO_ADAPT" && deadline === "unclear") {
     verdict = "ASK";
     policyReason = "Hard delivery deadline could not be checked";
+  } else if (evidence.budgetRisk) {
+    verdict = "ASK";
+    policyReason = "Hard budget limit exceeded or could not be checked";
+  } else if (evidence.atRisk.length) {
+    verdict = "ASK";
+    policyReason = evidence.atRisk[0];
   } else if (instinctVerdict === "AUTO_ADAPT" && !confident) {
     verdict = "ASK";
     policyReason = "AUTO_ADAPT confidence below 0.80";
   }
   return {
-    verdict, policyReason, instinctVerdict, probabilities,
+    verdict, finalVerdict: verdict, policyReason, instinctVerdict, probabilities,
+    confidence: probabilities[instinctVerdict],
+    constraintsPreserved: verified ? evidence.preserved : [],
+    constraintsAtRisk: [...evidence.atRisk, ...(deadline === "missed" ? ["Hard delivery deadline would be missed"] : deadline === "unclear" ? ["Hard delivery deadline could not be checked"] : []), ...(!verified ? ["Physical state is not verified"] : [])],
+    verifiedFacts: verified ? evidence.facts : [],
+    unverifiedFacts: verified ? [] : evidence.facts,
     policyChecks: [
       { rule: "Verification", status: verified ? "passed" : "enforced", detail: verified ? "Merchant state supplied as verified" : "Unverified physical state must remain on hold" },
       { rule: "Hard deadline", status: deadline === "clear" ? "passed" : "enforced", detail: deadline === "missed" ? "Proposed delivery exceeds a hard deadline" : deadline === "unclear" ? "Hard timing constraint cannot be compared; automatic adaptation is disabled" : "No identified hard delivery deadline is missed" },
+      { rule: "Hard order constraints", status: evidence.atRisk.length ? "enforced" : "passed", detail: evidence.atRisk.length ? evidence.atRisk.join("; ") : evidence.preserved.length ? evidence.preserved.join("; ") : "No structured hard order constraints supplied; semantic compatibility is evaluated by Instinct" },
       { rule: "Automatic adaptation", status: instinctVerdict !== "AUTO_ADAPT" ? "not_applicable" : confident ? "passed" : "enforced", detail: instinctVerdict !== "AUTO_ADAPT" ? "Instinct did not select AUTO_ADAPT" : `Instinct AUTO_ADAPT confidence ${(probabilities.AUTO_ADAPT * 100).toFixed(1)}%; minimum 80%` },
     ],
   };

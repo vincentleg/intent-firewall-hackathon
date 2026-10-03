@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { displayVerdict, isDecision, isRecord, type Decision, type Verdict } from "../lib/decision";
-import { decisionInput, scenarios, type Purpose, type ScenarioId } from "../lib/demo";
+import { decisionInput, purposeOptions, scenarios, type Purpose, type ScenarioId } from "../lib/demo";
 import DecisionReceipt from "./decision-receipt";
 
 const verdictCopy: Record<Verdict, { title: string; description: string }> = {
@@ -26,6 +26,8 @@ export default function Home() {
   const countedAdaptations = useRef(new Set<string>());
   const scenario = scenarios.find((item) => item.id === scenarioId)!;
   const hard = purpose === "Client meeting";
+  const trays = scenarioId === "trays";
+  const deskMeals = purpose === "Four separately labeled desk meals";
   const comparisonComplete = !!comparison["Client meeting"] && !!comparison["Casual team lunch"];
 
   useEffect(() => () => activeRequest.current?.abort(), []);
@@ -111,14 +113,14 @@ export default function Home() {
         <section className="intent-card" aria-labelledby="intent-title">
           <div className="intent-heading"><div><span className="step">01</span><h2 id="intent-title">The Intent Record</h2></div><span className="origin">Sent with the order by the shopper agent</span></div>
           <div className="intent-content">
-            <div className="purpose-field"><span className="field-label">PURPOSE · SWITCH TO COMPARE</span><div className="purpose-switch" role="group" aria-label="Customer purpose">{(["Client meeting", "Casual team lunch"] as const).map((item) => <button key={item} type="button" aria-controls="live-decision" aria-pressed={purpose === item} onClick={() => { if (item !== purpose) { clearDecision(); setPurpose(item); } }}>{item}</button>)}</div><small>{hard ? "Timing is a promise. The meeting can’t wait." : "Timing is a preference. Lunch can wait a little."}</small></div>
-            <dl className="intent-facts"><div><dt>PARTY SIZE</dt><dd>4 people</dd></div><div><dt>DELIVERY DEADLINE</dt><dd>12:30 PM <span className={`deadline-tag ${hard ? "hard" : "soft"}`}>{hard ? "Hard" : "Soft"}</span></dd></div><div><dt>BUDGET</dt><dd>$60 maximum</dd></div><div><dt>PREFERENCE</dt><dd>Sparkling water</dd></div></dl>
+            <div className="purpose-field"><span className="field-label">PURPOSE · SWITCH TO COMPARE</span><div className="purpose-switch" role="group" aria-label="Customer purpose">{purposeOptions(scenarioId).map((item) => <button key={item} type="button" aria-controls="live-decision" aria-pressed={purpose === item} onClick={() => { if (item !== purpose) { clearDecision(); setPurpose(item); } }}>{item}</button>)}</div><small>{trays ? deskMeals ? "Four people. Four labeled meals. Sharing isn’t the intent." : "Eating together matters. The serving format can change." : hard ? "Timing is a promise. The meeting can’t wait." : "Timing is a preference. Lunch can wait a little."}</small></div>
+            <dl className="intent-facts"><div><dt>PARTY SIZE</dt><dd>4 people</dd></div><div><dt>DELIVERY DEADLINE</dt><dd>12:30 PM <span className={`deadline-tag ${hard ? "hard" : "soft"}`}>{hard ? "Hard" : "Soft"}</span></dd></div><div><dt>BUDGET</dt><dd>$60 maximum</dd></div><div><dt>PREFERENCE</dt><dd>{trays ? deskMeals ? "Separate labeled meals" : "Shared meal" : "Sparkling water"}</dd></div></dl>
           </div>
         </section>
 
         <section className="scenario-section" aria-labelledby="scenario-title">
           <div className="section-heading"><div><span className="step">02</span><h2 id="scenario-title">The restaurant needs to make a change</h2></div><span>Choose a real-world hiccup</span></div>
-          <div className="scenario-grid">{scenarios.map((item) => <button key={item.id} type="button" className={`scenario-card ${scenarioId === item.id ? "selected" : ""}`} aria-controls="live-decision" aria-pressed={scenarioId === item.id} onClick={() => { if (item.id !== scenarioId) { clearDecision(); setScenarioId(item.id); } }}><div className="scenario-top"><span className="scenario-icon" aria-hidden="true">{item.icon}</span><span className="scenario-number">{item.number}</span><span className="selection-dot" aria-hidden="true" /></div><h3>{item.title}</h3><p>{item.description}</p><div className="change-line"><span>FROM</span><strong>{item.original}</strong></div><div className="change-line proposed"><span>TO</span><strong>{item.proposed}</strong></div></button>)}</div>
+          <div className="scenario-grid">{scenarios.map((item) => <button key={item.id} type="button" className={`scenario-card ${scenarioId === item.id ? "selected" : ""}`} aria-controls="live-decision" aria-pressed={scenarioId === item.id} onClick={() => { if (item.id !== scenarioId) { clearDecision(); setScenarioId(item.id); if (!purposeOptions(item.id).includes(purpose)) setPurpose(purposeOptions(item.id)[0]); } }}><div className="scenario-top"><span className="scenario-icon" aria-hidden="true">{item.icon}</span><span className="scenario-number">{item.number}</span><span className="selection-dot" aria-hidden="true" /></div><h3>{item.title}</h3><p>{item.description}</p><div className="change-line"><span>FROM</span><strong>{item.original}</strong></div><div className="change-line proposed"><span>TO</span><strong>{item.proposed}</strong></div></button>)}</div>
         </section>
 
         <section className="decision-section" aria-labelledby="decision-title">
