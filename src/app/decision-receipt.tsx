@@ -36,6 +36,8 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
               {result.unverifiedFacts.length > 0 && <div><dt>Unverified facts</dt><dd>{result.unverifiedFacts.join(" · ")}</dd></div>}
             </dl>
           </div>
+          {result.orchestration?.mode === "managed_agent" && <p className="receipt-note">Merchant agent session: ZooWork Managed Agent · {result.orchestration.resumed ? "resumed order context" : "new order context"} · {result.orchestration.history?.length ?? 0} recent decisions</p>}
+          {result.orchestration?.mode === "direct_fallback" && <p className="receipt-note">Merchant agent unavailable. Evaluated directly with Instinct and the same policy guardrails.</p>}
           <small>Merchant attributes and verification are supplied demo facts. No real order is changed.</small>
         </div>
         <div className="receipt-evidence">

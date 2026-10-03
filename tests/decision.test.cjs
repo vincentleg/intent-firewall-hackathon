@@ -149,3 +149,28 @@ test("hard budget, serving and dietary constraints override soft preferences", (
   assert.deepEqual(result.constraintsPreserved, []);
   assert.ok(result.unverifiedFacts.length > 0);
 });
+
+test("managed-agent configuration failure falls back to one canonical evaluation", async () => {
+  const saved = { flag: process.env.USE_ZOOWORK_AGENT, key: process.env.ZOOWORK_API_KEY, agent: process.env.ZOOWORK_AGENT_ID };
+  process.env.INSTINCT_API_KEY = 'test-only-key';
+  process.env.USE_ZOOWORK_AGENT = 'true';
+  delete process.env.ZOOWORK_API_KEY;
+  let calls = 0;
+  global.fetch = async () => { calls++; return Response.json({ answers: { decision: { choice: 'AUTO_ADAPT', probabilities: probabilities(.9) } } }); };
+  try {
+    const response = await POST(request(decisionInput('Casual team lunch', 'delay')));
+    const data = await response.json();
+    assert.equal(response.status, 200); assert.equal(data.verdict, 'AUTO_ADAPT');
+    assert.equal(data.orchestration.mode, 'direct_fallback'); assert.equal(calls, 1);
+    process.env.ZOOWORK_API_KEY = 'test-only-managed-key';
+    process.env.ZOOWORK_AGENT_ID = 'agt_test';
+    const invalid = await POST(request({ ...decisionInput('Client meeting', 'delay'), agentSessionToken: 'forged.token' }));
+    const result = await invalid.json();
+    assert.equal(result.verdict, 'ASK'); assert.equal(result.orchestration.mode, 'direct_fallback');
+    assert.ok(!JSON.stringify(result).includes('test-only-managed-key'));
+  } finally {
+    for (const [name, value] of [['USE_ZOOWORK_AGENT', saved.flag], ['ZOOWORK_API_KEY', saved.key], ['ZOOWORK_AGENT_ID', saved.agent]]) {
+      if (value === undefined) delete process.env[name]; else process.env[name] = value;
+    }
+  }
+});

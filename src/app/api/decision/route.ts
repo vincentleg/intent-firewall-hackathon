@@ -1,5 +1,6 @@
-import { isDecisionInput, isProbabilities, isRecord, isVerdict } from "../../../lib/decision";
+import { isDecisionInput, isProbabilities, isRecord, isVerdict, type DecisionInput } from "../../../lib/decision";
 import { applyPolicy } from "../../../lib/policy";
+import { evaluateMerchantChangeWithAgent, sessionTokenFromInput } from "../../../lib/merchant-agent";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -26,12 +27,29 @@ export async function POST(request: Request) {
     return json({ error: "Provide intent, originalOrder, proposedChange, and a verified or unverified verificationState.", code: "INVALID_INPUT" }, 400);
   }
 
+  // Cache one canonical evaluation per request, including an agent failure after tool execution.
+  let evaluation: Promise<Response> | undefined;
+  const evaluate = () => (evaluation ??= evaluateDirect(input, request.signal)).then(response => response.clone());
+  if (process.env.USE_ZOOWORK_AGENT === "true") {
+    try {
+      return await evaluateMerchantChangeWithAgent(input, evaluate, sessionTokenFromInput(input), request.signal);
+    } catch {
+      const response = await evaluate();
+      const data: unknown = await response.json();
+      return json({ ...(isRecord(data) ? data : {}), orchestration: { mode: "direct_fallback" } }, response.status);
+    }
+  }
+  return evaluate();
+}
+
+async function evaluateDirect(input: DecisionInput, signal: AbortSignal) {
+  const apiKey = process.env.INSTINCT_API_KEY;
   const controller = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => { timedOut = true; controller.abort(); }, upstreamTimeoutMs);
   const cancel = () => controller.abort();
-  request.signal.addEventListener("abort", cancel, { once: true });
-  if (request.signal.aborted) controller.abort();
+  signal.addEventListener("abort", cancel, { once: true });
+  if (signal.aborted) controller.abort();
   try {
     const upstream = await fetch("https://api.zoowork.ai/v1/systemone", {
       method: "POST",
@@ -76,6 +94,6 @@ export async function POST(request: Request) {
     return json({ error: timedOut ? "The live decision took too long. Please retry." : "Unable to reach the live decision service. Please retry.", code: timedOut ? "TIMEOUT" : "UPSTREAM_ERROR" }, timedOut ? 504 : 502);
   } finally {
     clearTimeout(timer);
-    request.signal.removeEventListener("abort", cancel);
+    signal.removeEventListener("abort", cancel);
   }
 }

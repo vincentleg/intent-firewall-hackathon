@@ -24,6 +24,13 @@ export type IntentRecord = {
   originalOrderContext: string;
 };
 export type Decision = {
+  orchestration?: {
+    mode: "managed_agent" | "direct_fallback";
+    sessionToken?: string;
+    sessionId?: string;
+    resumed?: boolean;
+    history?: { eventId: string; verdict: Verdict; policyReason: string }[];
+  };
   finalVerdict: Verdict;
   confidence: number;
   constraintsPreserved: string[];

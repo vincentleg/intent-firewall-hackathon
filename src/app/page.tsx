@@ -23,6 +23,7 @@ export default function Home() {
   const [avoided, setAvoided] = useState(0);
   const [comparison, setComparison] = useState<Partial<Record<Purpose, Verdict>>>({});
   const activeRequest = useRef<AbortController | null>(null);
+  const orderSessions = useRef(new Map<string, string>());
   const countedAdaptations = useRef(new Set<string>());
   const scenario = scenarios.find((item) => item.id === scenarioId)!;
   const hard = purpose === "Client meeting";
@@ -50,12 +51,14 @@ export default function Home() {
     setError("");
     setResult(null);
     let timedOut = false;
-    const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 40_000);
+    const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 60_000);
     const slowTimer = window.setTimeout(() => { if (activeRequest.current === controller) setSlow(true); }, 8_000);
+    const input = decisionInput(purpose, scenarioId);
+    const orderKey = JSON.stringify([input.intent, input.originalOrder]);
     try {
       const response = await fetch("/api/decision", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(decisionInput(purpose, scenarioId)), signal: controller.signal,
+        body: JSON.stringify({ ...input, agentSessionToken: orderSessions.current.get(orderKey) }), signal: controller.signal,
       });
       let data: unknown;
       try { data = await response.json(); }
@@ -70,6 +73,8 @@ export default function Home() {
       }
       if (!isDecision(data)) throw new Error("The live service returned an incomplete decision. Please try again.");
       if (activeRequest.current !== controller) return;
+      if (data.orchestration?.mode === "managed_agent" && data.orchestration.sessionToken) orderSessions.current.set(orderKey, data.orchestration.sessionToken);
+      else if (data.orchestration?.mode === "direct_fallback") orderSessions.current.delete(orderKey);
       setResult(data);
       const changeKey = `${purpose}:${scenarioId}`;
       if (data.verdict === "AUTO_ADAPT" && !countedAdaptations.current.has(changeKey)) {
