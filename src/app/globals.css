@@ -293,3 +293,46 @@ h2 { font-size: 13px; font-weight: 600; }
   .timing-comparison.comparison-complete .comparison-verdict { font-size: clamp(18px, 5.2vw, 26px); }
   .semantic-comparison.comparison-complete .comparison-verdict { font-size: 20px; }
 }
+
+/* One guided story; manual controls appear only in Explore. */
+.focused-main { max-width: 1080px; }
+.focused-intro { margin: 12px 0 24px; }
+.focused-intro > div:first-child { max-width: 800px; }
+.mode-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; margin-bottom: 24px; }
+.mode-link { min-height: 44px; color: var(--green); font-size: 13px; text-decoration: underline; text-underline-offset: 4px; }
+.mode-link:hover { color: #759346; }
+.mode-label { font-size: 16px; font-weight: 600; }
+.reset-button { margin-left: auto; color: #6b7a67; }
+.demo-button { min-width: 195px; padding: 15px 22px; }
+.explore-controls { display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; margin: 20px 0; }
+.explore-controls label { font-size: 11px; color: #687763; }
+.explore-controls select { display: block; width: 100%; min-height: 48px; margin-top: 7px; padding: 10px 34px 10px 12px; border: 1px solid #ccd7c4; border-radius: 8px; background: #fff; color: var(--green); font-size: 13px; }
+select:focus-visible { outline: 3px solid #759f39; outline-offset: 3px; }
+.focused-context { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 14px; background: #fff9; margin-bottom: 16px; overflow: hidden; }
+.focused-context > div { padding: 22px; min-width: 0; }
+.context-intent { animation: verdict-enter .3s ease-out; }
+.context-change { border-left: 1px solid var(--line); }
+.focused-context h2 { font-size: 19px; letter-spacing: -.5px; margin: 10px 0 8px; }
+.focused-context p { font-size: 13px; line-height: 1.7; }
+.focused-context .focused-change { font-size: 19px; color: var(--green); font-weight: 550; }
+.focused-context small { display: block; font-size: 11px; color: #6d7b66; line-height: 1.7; margin-top: 10px; }
+.focused-result { min-height: 220px; padding: 20px 24px; }
+.focused-result .result-content { padding-bottom: 0; }
+.focused-result .result-content p { max-width: 700px; font-size: 13px; }
+.focused-result .spinner { display: inline-block; vertical-align: middle; margin-right: 8px; width: 19px; height: 19px; }
+.comparison-message { grid-column: 1 / -1; color: #4a6540; font-size: 13px; line-height: 1.6; }
+.secondary-proof { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 18px; font-size: 12px; color: #6b7c62; }
+.secondary-proof span { max-width: 570px; line-height: 1.7; }
+@media (max-width: 768px) { .explore-controls { grid-template-columns: 1fr 1fr; } .evaluate-button { grid-column: 1 / -1; } }
+@media (max-width: 650px) {
+  .focused-intro .eyebrow { line-height: 1.7; display: block; }
+  .mode-actions { gap: 8px 18px; }
+  .focused-context { grid-template-columns: 1fr; }
+  .focused-context > div { padding: 18px; }
+  .context-change { border-left: 0; border-top: 1px solid var(--line); }
+  .focused-context h2, .focused-context .focused-change { font-size: 17px; }
+  .explore-controls { grid-template-columns: 1fr; }
+  .focused-result { padding: 18px; min-height: 220px; }
+  .focused-result .waiting-title { font-size: 27px; }
+  .secondary-proof { align-items: flex-start; flex-direction: column; gap: 5px; }
+}

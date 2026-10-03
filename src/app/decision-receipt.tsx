@@ -18,11 +18,11 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
           <span className="field-label">FINAL DECISION · {displayVerdict(result.verdict)}</span>
           <strong>{result.policyReason}</strong>
           <dl className="receipt-facts">
-            <div><dt>Customer purpose</dt><dd>{purpose}</dd></div>
+            <div><dt>What did the customer mean?</dt><dd>{purpose}</dd></div>
             <div><dt>Verification state</dt><dd>{scenarioId === "kitchen" ? "unverified" : "verified"}</dd></div>
             <div><dt>Delivery constraint</dt><dd>12:30 PM · {hard ? "hard deadline" : "soft target; up to 15 minutes flexible"}</dd></div>
             <div><dt>Order constraints</dt><dd>4 people · $60 maximum · {trays ? "same meal, four servings" : "same sparkling water"}</dd></div>
-            <div><dt>Merchant change</dt><dd>{scenario.original} → {scenario.proposed}</dd></div>
+            <div><dt>What changed?</dt><dd>{scenario.original} → {scenario.proposed}</dd></div>
             <div><dt>Key constraints</dt><dd>{hardConstraints.join(" · ")}</dd></div>
             <div><dt>Verified facts</dt><dd>{result.verifiedFacts.length ? result.verifiedFacts.join(" · ") : "No verified change facts"}</dd></div>
           </dl>
