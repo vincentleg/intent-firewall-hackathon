@@ -17,17 +17,19 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
         <div className="policy-explanation">
           <span className="field-label">FINAL DECISION · {displayVerdict(result.verdict)}</span>
           <strong>{result.policyReason}</strong>
-          <p>Instinct raw verdict: <b>{result.instinctVerdict}</b></p>
-          <p>Instinct choice confidence: <b>{(result.confidence * 100).toFixed(1)}%</b></p>
-          <p>{result.verdict === result.instinctVerdict ? "The final decision agrees with Instinct." : "A deterministic guardrail changed Instinct’s decision."}</p>
           <dl className="receipt-facts">
             <div><dt>Customer purpose</dt><dd>{purpose}</dd></div>
             <div><dt>Verification state</dt><dd>{scenarioId === "kitchen" ? "unverified" : "verified"}</dd></div>
             <div><dt>Delivery constraint</dt><dd>12:30 PM · {hard ? "hard deadline" : "soft target; up to 15 minutes flexible"}</dd></div>
             <div><dt>Order constraints</dt><dd>4 people · $60 maximum · {trays ? "same meal, four servings" : "same sparkling water"}</dd></div>
             <div><dt>Merchant change</dt><dd>{scenario.original} → {scenario.proposed}</dd></div>
-            <div><dt>Scenario facts used</dt><dd>{scenario.facts.join(" · ")}</dd></div>
+            <div><dt>Key constraints</dt><dd>{hardConstraints.join(" · ")}</dd></div>
+            <div><dt>Verified facts</dt><dd>{result.verifiedFacts.length ? result.verifiedFacts.join(" · ") : "No verified change facts"}</dd></div>
           </dl>
+          <details className="receipt-deeper"><summary>Model reasoning &amp; guardrails</summary>
+          <p>Instinct raw verdict: <b>{result.instinctVerdict}</b></p>
+          <p>Instinct choice confidence: <b>{(result.confidence * 100).toFixed(1)}%</b></p>
+          <p>{result.verdict === result.instinctVerdict ? "The final decision agrees with Instinct." : "A deterministic guardrail changed Instinct’s decision."}</p>
           <div className="agent-context">
             <span className="field-label">AGENT CONTEXT</span>
             <dl className="receipt-facts">
@@ -40,11 +42,12 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
               <div><dt>Unverified facts</dt><dd>{result.unverifiedFacts.length ? result.unverifiedFacts.join(" · ") : "None reported"}</dd></div>
             </dl>
           </div>
+          </details>
           {result.orchestration?.mode === "managed_agent" && <p className="receipt-note">Merchant agent session: ZooWork Managed Agent · {result.orchestration.resumed ? "resumed order context" : "new order context"} · {result.orchestration.history?.length ?? 0} recent decisions</p>}
           {result.orchestration?.mode === "direct_fallback" && <p className="receipt-note">Merchant agent unavailable. Evaluated directly with Instinct and the same policy guardrails.</p>}
           <small>Merchant attributes and verification are supplied demo facts. No real order is changed.</small>
         </div>
-        <div className="receipt-evidence">
+        <details className="receipt-evidence"><summary>Probability distribution &amp; policy checks</summary>
           <span className="field-label">INSTINCT PROBABILITY DISTRIBUTION</span>
           <div className="probabilities" aria-label="Instinct outcome probabilities">
             {outcomes.map((outcome) => (
@@ -62,7 +65,7 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
               <p>{check.detail}</p>
             </li>
           ))}</ul> : <p className="receipt-note">Unverified state → HOLD. Hard deadline miss → ASK. AUTO-ADAPT requires verified state and at least 80% confidence.</p>}
-        </div>
+        </details>
       </div>
     </details>
   );

@@ -237,3 +237,59 @@ h2 { font-size: 13px; font-weight: 600; }
   .outcome-strip { grid-template-columns: 1fr; gap: 14px; }
   .receipt-facts dd { overflow-wrap: anywhere; }
 }
+
+/* Focus the first viewport on purpose, change and action. */
+.intro { margin-bottom: 16px; }
+.intro > div:first-child { max-width: 780px; }
+.intro p { font-size: 15px; line-height: 1.6; color: #344e40; }
+.intro .intro-support { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.avoided { min-width: 160px; padding: 14px; column-gap: 12px; background: transparent; border-color: var(--line); }
+.avoided strong { font-size: 36px; letter-spacing: -1px; }
+.avoided > span:not(.avoided-icon) { font-size: 10px; }
+.avoided small { font-size: 8px; }
+.story-strip { display: flex; align-items: center; gap: 14px; font-size: 11px; font-weight: 550; color: #516a54; margin-bottom: 16px; }
+.story-strip i { font-style: normal; color: #94a18b; }
+.intent-content { padding-top: 12px; padding-bottom: 12px; }
+.scenario-grid { grid-template-columns: 1.2fr 1.2fr 1fr 1fr; }
+.scenario-card { padding: 12px 14px; }
+.scenario-top { margin-bottom: 4px; }
+.scenario-card p { font-size: 11px; margin-bottom: 8px; }
+.scenario-card .change-line { font-size: 11px; margin-top: 4px; }
+.scenario-package, .scenario-kitchen { background: transparent; }
+.scenario-delay:not(.selected), .scenario-trays:not(.selected) { background: #fff; }
+.scenario-number { display: none; }
+.timing-comparison.comparison-complete { border: 1px solid #adc98a; background: #e9f2dd; padding: 24px; }
+.timing-comparison.comparison-complete .comparison-caption strong { font-size: 13px; letter-spacing: 1px; line-height: 1.5; }
+.timing-comparison.comparison-complete .comparison-verdict { font-size: clamp(26px, 3vw, 39px); }
+.semantic-comparison.comparison-complete { background: #f0f3eb; padding: 16px 20px; }
+.semantic-comparison.comparison-complete .comparison-verdict { font-size: 25px; }
+.receipt-deeper { border-top: 1px solid var(--line); margin-top: 10px; }
+.receipt-deeper summary, .receipt-evidence summary { padding: 12px 0; color: var(--green); font-size: 12px; }
+.receipt-evidence { display: block; }
+.receipt-evidence .probabilities { margin: 14px 0 22px; }
+.receipt-evidence .policy-checks { margin-top: 12px; }
+@media (min-width: 900px) and (max-height: 900px) {
+  .demo-main { padding-top: 20px; }
+  .intro { margin-bottom: 12px; }
+  .story-strip { margin-bottom: 12px; }
+  .scenario-section, .decision-section { margin-top: 14px; }
+  .section-heading { margin-bottom: 10px; }
+}
+@media (max-width: 1050px) { .scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) {
+  .intro { flex-wrap: wrap; gap: 12px; }
+  .intro p { font-size: 14px; }
+  .intro .intro-support { font-size: 12px; }
+  .avoided { display: flex; align-items: center; padding: 8px 12px; min-width: 0; gap: 12px; width: 100%; text-align: left; }
+  .avoided strong { font-size: 26px; }
+  .avoided br { display: none; }
+  .avoided-icon, .avoided small { display: none; }
+  .story-strip { gap: 10px; font-size: 10px; margin-top: 16px; }
+  .scenario-grid { grid-template-columns: 1fr; }
+  .scenario-card { padding: 12px 14px; }
+  .scenario-top { float: right; margin-left: 8px; }
+  .scenario-card .change-line { font-size: 12px; }
+  .timing-comparison.comparison-complete { padding: 18px 12px; }
+  .timing-comparison.comparison-complete .comparison-verdict { font-size: clamp(18px, 5.2vw, 26px); }
+  .semantic-comparison.comparison-complete .comparison-verdict { font-size: 20px; }
+}
