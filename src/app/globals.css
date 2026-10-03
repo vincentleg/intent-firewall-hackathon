@@ -394,3 +394,59 @@ select:focus-visible { outline: 3px solid #759f39; outline-offset: 3px; }
   .merchant-event .focused-change { font-size: 22px; }
   .approval-comparison { grid-template-columns: 1fr; gap: 14px; }
 }
+
+/* Static presentation frames use live responses, with presenter-controlled pacing. */
+.capture-main { max-width: 1160px; margin: auto; padding: 24px 40px 36px; }
+.capture-controls { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 32px; }
+.capture-controls > div { display: flex; align-items: center; gap: 20px; }
+.capture-step { color: #63765a; font-size: 13px; font-weight: 550; }
+.capture-controls button:disabled { opacity: .4; cursor: default; }
+.capture-controls .next-step { min-width: 140px; }
+.capture-frame { min-height: 550px; display: flex; flex-direction: column; justify-content: center; }
+.capture-frame > h1 { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.15; max-width: 960px; margin: 14px 0 32px; }
+.capture-demo *, .capture-demo *::before, .capture-demo *::after { animation: none !important; }
+.capture-demo .context-intent, .capture-demo .capture-verdict { transition: none; }
+.capture-story { display: grid; grid-template-columns: 1fr 1.1fr; align-items: center; gap: 48px; }
+.capture-story .order-card { padding: 24px; }
+.capture-story .context-intent { margin-top: 22px; }
+.capture-record { display: inline-block; font-size: 11px; font-weight: 600; color: #4a693c; background: #edf4e5; border-radius: 5px; padding: 7px 10px; }
+.capture-action h2 { font-size: 23px; letter-spacing: -.5px; margin: 12px 0; }
+.capture-action p, .shopper-stage p { color: #64775b; font-size: 14px; line-height: 1.8; }
+.capture-action .capture-delay { color: var(--green); font-weight: 550; font-size: clamp(23px, 2.5vw, 34px); margin: 12px 0; }
+.capture-verdict { margin-top: 22px; padding: 24px; border-radius: 12px; background: var(--green); color: #f4f8ec; }
+.capture-verdict .final-verdict { display: block; color: var(--lime); font-size: clamp(38px, 4.2vw, 60px); }
+.capture-verdict.verdict-ask .final-verdict { color: #ffdb93; }
+.capture-verdict.verdict-hold .final-verdict { color: #c9dbff; }
+.capture-verdict.verdict-block .final-verdict { color: #ffb2a6; }
+.capture-verdict h3 { font-size: 15px; font-weight: 550; margin-bottom: 8px; }
+.capture-verdict p { color: #c1d0b7; font-size: 12px; line-height: 1.7; }
+.capture-checks { display: grid; gap: 9px; padding: 16px 0; font-size: 14px; line-height: 1.6; color: #506d44; list-style: none; }
+.capture-loading { padding: 18px 0; }
+.capture-error .run-button { margin-top: 16px; }
+.shopper-stage { max-width: 600px; border: 1px solid var(--line); border-radius: 14px; padding: 30px; background: #fff; }
+.shopper-stage h2 { font-size: 25px; margin-bottom: 8px; font-weight: 550; }
+.shopper-emblem { width: 48px; height: 48px; border-radius: 12px; background: var(--green); color: var(--lime); display: grid; place-items: center; font-size: 28px; margin-bottom: 18px; }
+.capture-hero { display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: center; }
+.capture-hero > div { min-width: 0; }
+.capture-hero > div > p { margin-top: 10px; font-size: 20px; font-weight: 550; color: #536c47; }
+.capture-hero .capture-verdict { min-height: 200px; }
+.hero-arrow { color: #7a9a58; font-size: 42px; }
+.capture-takeaway { max-width: 780px; font-size: 17px; line-height: 1.7; margin-top: 32px; color: #4c6541; }
+.capture-sponsor { align-self: flex-start; margin-top: 20px; }
+.intent-rewind { color: #647b52; line-height: 1.8; font-size: 13px; }
+@media (max-width: 900px) { .capture-story { gap: 24px; } .capture-hero { gap: 12px; } .capture-verdict { padding: 18px; } .capture-verdict .final-verdict { font-size: 38px; } }
+@media (max-width: 650px) {
+  .capture-main { padding: 20px; }
+  .capture-controls { flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .capture-controls > div { flex-wrap: wrap; gap: 8px 18px; }
+  .capture-controls .next-step { min-width: 120px; }
+  .capture-frame { min-height: 0; }
+  .capture-frame > h1 { font-size: 30px; margin-bottom: 22px; }
+  .capture-story { grid-template-columns: 1fr; gap: 24px; }
+  .capture-hero { grid-template-columns: 1fr; gap: 18px; }
+  .capture-hero .hero-arrow { text-align: center; }
+  .capture-hero .capture-verdict { min-height: 0; }
+  .capture-verdict .final-verdict { font-size: 40px; letter-spacing: -1.5px; }
+  .capture-takeaway { font-size: 15px; }
+  .shopper-stage { padding: 22px; }
+}

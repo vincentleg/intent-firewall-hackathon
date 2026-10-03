@@ -5,6 +5,7 @@ import Link from "next/link";
 import { displayVerdict, isDecision, isRecord, type Decision, type Verdict } from "../lib/decision";
 import { decisionInput, purposeOptions, scenarios, type Purpose, type ScenarioId } from "../lib/demo";
 import DecisionReceipt from "./decision-receipt";
+import CaptureDemo from "./capture-demo";
 
 const verdictCopy: Record<Verdict, string> = {
   AUTO_ADAPT: "Resolved automatically", ASK: "Customer decision needed",
@@ -14,6 +15,7 @@ type Phase = "idle" | "arriving" | "accepted" | "event" | "meeting" | "switching
 const emptyComparison = () => ({ delay: {}, trays: {} } as Record<"delay" | "trays", Partial<Record<Purpose, Verdict>>>);
 
 export default function Home() {
+  const [capture, setCapture] = useState(false);
   const [mode, setMode] = useState<"guided" | "explore">("guided");
   const [phase, setPhase] = useState<Phase>("idle");
   const [purpose, setPurpose] = useState<Purpose>("Client meeting");
@@ -130,6 +132,8 @@ export default function Home() {
     }
   }
 
+  if (capture) return <CaptureDemo onExit={() => { reset(); setCapture(false); }} />;
+
   const eventVisible = mode === "explore" || !["idle", "arriving", "accepted"].includes(phase);
   const orderStatus = error ? "DECISION SERVICE UNAVAILABLE" : loading ? "EVALUATING INTENT" : result ? ({ ASK: "CUSTOMER DECISION NEEDED", AUTO_ADAPT: "CHANGE AUTO-RESOLVED", HOLD: "WAITING FOR VERIFICATION", BLOCK: "CHANGE BLOCKED" }[result.verdict]) : phase === "arriving" ? "ORDER ARRIVING" : eventVisible ? "CHANGE PROPOSED" : "ORDER ACCEPTED";
   const deliveryUpdated = result?.verdict === "AUTO_ADAPT" && scenarioId === "delay";
@@ -137,7 +141,7 @@ export default function Home() {
     <header className="topbar"><Link className="brand" href="/"><span className="brand-mark" aria-hidden="true">⌘</span>Intent Firewall</Link><span className="powered"><span className="status-dot" />Powered by ZooWork Instinct</span></header>
     <main className="demo-main focused-main" id="main-content">
       <section className="intro focused-intro"><div><span className="eyebrow">ORDER CHANGES SHOULDN’T ALWAYS INTERRUPT THE CUSTOMER</span><h1>Same change.<br /><span>Different intent.</span></h1><p>The restaurant agent that resolves harmless order changes without bothering the customer.</p><p className="intro-support">When an AI shopper places an order, Intent Firewall helps the restaurant handle changes without breaking what the customer actually meant.</p></div></section>
-      <div className="mode-actions">{mode === "guided" ? <>{!busy && <button className="run-button demo-button" onClick={() => run(true, error ? scenarioId : "delay")}>{error ? "Retry decision" : phase === "complete" ? "Replay demo" : "Run live order demo"}<span aria-hidden="true">↗</span></button>}{busy && <><button className="run-button pause-button" onClick={togglePause}>{paused ? "Resume" : "Pause"}</button><button className="mode-link restart-button" onClick={() => { reset(); void run(true, scenarioId); }}>Restart</button></>}<button className="mode-link" onClick={() => switchMode("explore")}>Explore manually</button></> : <><span className="mode-label">Merchant console</span><button className="mode-link" onClick={() => switchMode("guided")}>Back to live order demo</button></>}{!busy && (result || error || phase !== "idle") && <button className="mode-link reset-button" onClick={reset}>Reset</button>}</div>
+      <div className="mode-actions">{mode === "guided" ? <>{!busy && <button className="run-button demo-button" onClick={() => run(true, error ? scenarioId : "delay")}>{error ? "Retry decision" : phase === "complete" ? "Replay demo" : "Run live order demo"}<span aria-hidden="true">↗</span></button>}{busy && <><button className="run-button pause-button" onClick={togglePause}>{paused ? "Resume" : "Pause"}</button><button className="mode-link restart-button" onClick={() => { reset(); void run(true, scenarioId); }}>Restart</button></>}<button className="mode-link capture-entry" onClick={() => { reset(); setCapture(true); }}>Step-by-step demo</button><button className="mode-link" onClick={() => switchMode("explore")}>Explore manually</button></> : <><span className="mode-label">Merchant console</span><button className="mode-link" onClick={() => switchMode("guided")}>Back to live order demo</button></>}{!busy && (result || error || phase !== "idle") && <button className="mode-link reset-button" onClick={reset}>Reset</button>}</div>
       <div className={`transaction-flow ${busy && !paused ? "flow-active" : ""}`} aria-label="Order transaction"><span><b>Shopper Agent</b><small>Sends order + intent</small></span><i aria-hidden="true">→</i><span><b>Active order #1842</b><small>Purpose travels with the order</small></span><i aria-hidden="true">→</i><span><b>Restaurant</b><small>Receives and fulfills</small></span></div>
       {mode === "explore" && <div className="explore-controls"><label>Customer purpose<select className="purpose-select" value={purpose} onChange={(event) => { clearDecision(); setPurpose(event.target.value as Purpose); }}>{pair.map((item) => <option key={item}>{item}</option>)}</select></label><label>Merchant change<select className="scenario-select" value={scenarioId} onChange={(event) => { const next = event.target.value as ScenarioId; clearDecision(); setScenarioId(next); if (!purposeOptions(next).includes(purpose)) setPurpose(purposeOptions(next)[0]); }}>{[scenarios[1], scenarios[3], scenarios[0], scenarios[2]].map((item) => <option key={item.id} value={item.id}>{item.id === "trays" ? "Bowls → family trays" : item.title}</option>)}</select></label><button className="run-button evaluate-button" disabled={busy} onClick={() => run(false)}>{loading ? "Evaluating…" : error ? "Retry change" : "Evaluate change"}<span aria-hidden="true">↗</span></button></div>}
       <section className={`order-workspace ${paused ? "is-paused" : ""}`} aria-label="Active restaurant order">
