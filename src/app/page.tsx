@@ -21,7 +21,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [slow, setSlow] = useState(false);
   const [avoided, setAvoided] = useState(0);
-  const [comparison, setComparison] = useState<Partial<Record<Purpose, Verdict>>>({});
+  const [comparison, setComparison] = useState<Record<"delay" | "trays", Partial<Record<Purpose, Verdict>>>>({ delay: {}, trays: {} });
   const activeRequest = useRef<AbortController | null>(null);
   const orderSessions = useRef(new Map<string, string>());
   const countedAdaptations = useRef(new Set<string>());
@@ -29,7 +29,10 @@ export default function Home() {
   const hard = purpose === "Client meeting";
   const trays = scenarioId === "trays";
   const deskMeals = purpose === "Four separately labeled desk meals";
-  const comparisonComplete = !!comparison["Client meeting"] && !!comparison["Casual team lunch"];
+  const comparisonPurposes = purposeOptions(scenarioId);
+  const liveComparison = scenarioId === "trays" ? comparison.trays : comparison.delay;
+  const comparisonComplete = comparisonPurposes.every((item) => !!liveComparison[item]);
+  const nextPurpose = comparisonPurposes.find((item) => !liveComparison[item] && item !== purpose);
 
   useEffect(() => () => activeRequest.current?.abort(), []);
 
@@ -81,7 +84,7 @@ export default function Home() {
         countedAdaptations.current.add(changeKey);
         setAvoided((count) => count + 1);
       }
-      if (scenarioId === "delay") setComparison((previous) => ({ ...previous, [purpose]: data.verdict }));
+      if (scenarioId === "delay" || scenarioId === "trays") setComparison((previous) => ({ ...previous, [scenarioId]: { ...previous[scenarioId], [purpose]: data.verdict } }));
     } catch (failure) {
       if (activeRequest.current === controller) {
         setError(timedOut ? "The live decision took too long. Please try again."
@@ -134,15 +137,20 @@ export default function Home() {
             <article className="typical-flow"><div className="panel-label"><span>Typical flow</span><span className="panel-tag">EVERY CHANGE</span></div><div className="interruption-icon" aria-hidden="true">!</div><h3>Customer approval required</h3><p>A change happened. Send it back to the customer.</p><div className="flow-footer"><span className="small-dot" />Customer interrupted</div></article>
             <article id="live-decision" className={`firewall-flow ${result ? `verdict-${result.verdict.toLowerCase()}` : ""}`} aria-busy={loading}>
               <div className="panel-label"><span><span className="mini-mark" aria-hidden="true">⌘</span> Intent Firewall</span><span className="panel-tag">{result ? "LIVE RESULT" : "INTENT AWARE"}</span></div>
-              <div className="result-content" role="status" aria-live="polite">{loading ? <><div className="verdict-title loading-title">Checking intent<span className="loading-dots">…</span></div><p>{slow ? "Still waiting for a live response. Your decision will appear here; no change has been applied." : `Evaluating the change against ${purpose.toLowerCase()} intent.`}</p></> : error ? <><h3 className="error-title">Let’s try that again.</h3><p>{error}</p></> : result ? <><div className="verdict-title final-verdict">{displayVerdict(result.verdict)}</div><h3 className="final-policy-reason">{result.policyReason}</h3><p>{verdictCopy[result.verdict].description}</p></> : <><div className="verdict-title waiting-title">Intent comes first.</div><p>Run a live decision to see which changes need the customer’s attention.</p></>}</div>
+              <div className="result-content" key={`${purpose}:${scenarioId}:${loading ? "loading" : error ? "error" : result?.verdict ?? "waiting"}`} role="status" aria-live="polite">{loading ? <><div className="verdict-title loading-title">Checking intent<span className="loading-dots">…</span></div><p>{slow ? "Still waiting for a live response. Your decision will appear here; no change has been applied." : `Evaluating the change against ${purpose.toLowerCase()} intent.`}</p></> : error ? <><h3 className="error-title">Let’s try that again.</h3><p>{error}</p></> : result ? <><div className="verdict-title final-verdict">{displayVerdict(result.verdict)}</div><h3 className="final-policy-reason">{result.policyReason}</h3><p>{verdictCopy[result.verdict].description}</p></> : <><div className="verdict-title waiting-title">Intent comes first.</div><p>Run a live decision to see which changes need the customer’s attention.</p></>}</div>
               <div className="flow-footer">{result ? verdictCopy[result.verdict].title : "One change. The customer’s purpose makes the difference."}</div>
             </article>
           </div>
           <div className="reason-chips" aria-label="Scenario facts and policy reasons">{chips.map((chip) => <span key={chip}><span aria-hidden="true">{chip === "State is not verified" ? "○" : "·"}</span>{chip}</span>)}</div>
-          {scenarioId === "delay" && <section className={`purpose-comparison ${comparisonComplete ? "comparison-complete" : ""}`} aria-label="Live results by purpose" aria-live="polite"><div className="comparison-caption"><strong>{comparisonComplete ? "Same change. Different purpose." : "Same 15-minute delay. Two different purposes."}</strong><span>{comparisonComplete ? "12:30 PM → 12:45 PM · Latest successful live results." : "Run both purposes to compare their actual live results."}</span></div><div className="purpose-result"><span>Client meeting</span><strong className={comparison["Client meeting"] ? `comparison-verdict outcome-${comparison["Client meeting"].toLowerCase()}` : ""}>{comparison["Client meeting"] ? displayVerdict(comparison["Client meeting"]) : "Not run yet"}</strong></div>{comparisonComplete && <span className="comparison-arrow" aria-hidden="true">→</span>}<div className="purpose-result"><span>Casual team lunch</span><strong className={comparison["Casual team lunch"] ? `comparison-verdict outcome-${comparison["Casual team lunch"].toLowerCase()}` : ""}>{comparison["Casual team lunch"] ? displayVerdict(comparison["Casual team lunch"]) : "Not run yet"}</strong></div></section>}
+          {(scenarioId === "delay" || trays) && <section className={`purpose-comparison ${comparisonComplete ? "comparison-complete" : ""}`} aria-label="Live results by purpose" aria-live="polite">
+            <div className="comparison-caption"><strong>Same change. Different purpose.</strong><span>{trays ? "4 individual bowls → 2 family trays" : "12:30 PM → 12:45 PM"} · {comparisonComplete ? "Actual live decisions." : "Run both purposes to reveal the difference."}</span></div>
+            {comparisonPurposes.map((item, index) => <div className="comparison-entry" key={item}>{index > 0 && comparisonComplete && <span className="comparison-arrow" aria-hidden="true">→</span>}<div className="purpose-result"><span>{item}</span><strong className={liveComparison[item] ? `comparison-verdict outcome-${liveComparison[item].toLowerCase()}` : ""}>{liveComparison[item] ? displayVerdict(liveComparison[item]) : "Not run yet"}</strong></div></div>)}
+          </section>}
+          {result && (scenarioId === "delay" || trays) && <div className="demo-next"><span>{nextPurpose ? "Keep the merchant change. Switch the customer’s purpose." : trays ? "One meal. Two different meanings." : "Next: see why four servings aren’t always four meals."}</span>{nextPurpose ? <button type="button" onClick={() => { clearDecision(); setPurpose(nextPurpose); }}>Compare {nextPurpose === "Four separately labeled desk meals" ? "labeled desk meals" : nextPurpose.toLowerCase()} <span aria-hidden="true">→</span></button> : !trays ? <button type="button" onClick={() => { clearDecision(); setScenarioId("trays"); setPurpose("Shared team lunch"); }}>Try the shared-meal demo <span aria-hidden="true">→</span></button> : null}</div>}
           {result && <DecisionReceipt result={result} purpose={purpose} scenarioId={scenarioId} />}
         </section>
-        <footer className="demo-footer"><span>Simulated restaurant facts. Real Instinct decisions.</span><span>Shopper agent <span aria-hidden="true">→</span> Intent Record <span aria-hidden="true">→</span> Restaurant’s Intent Firewall</span></footer>
+        <section className="outcome-strip" aria-label="Product value"><span><b>Less interruption</b>Only ask when intent is at risk.</span><span><b>Faster resolution</b>Handle harmless changes automatically.</span><span><b>Intent preserved</b>Purpose and hard constraints come first.</span></section>
+        <footer className="demo-footer"><span>Simulated restaurant facts. Real Instinct decisions.</span><div className="architecture-strip" aria-label="Decision architecture">{["Shopper Agent", "Intent Record", "Restaurant Intent Firewall", "ZooWork Instinct", "Resolve or Escalate"].map((step, index) => <span key={step}>{index > 0 && <i aria-hidden="true">→</i>}{step}</span>)}</div></footer>
       </main>
     </div>
   );

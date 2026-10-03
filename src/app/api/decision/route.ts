@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   // Cache one canonical evaluation per request, including an agent failure after tool execution.
   let evaluation: Promise<Response> | undefined;
   const evaluate = () => (evaluation ??= evaluateDirect(input, request.signal)).then(response => response.clone());
-  if (process.env.USE_ZOOWORK_AGENT === "true") {
+  if (process.env.NODE_ENV !== "production" && process.env.USE_ZOOWORK_AGENT === "true") {
     try {
       return await evaluateMerchantChangeWithAgent(input, evaluate, sessionTokenFromInput(input), request.signal);
     } catch {

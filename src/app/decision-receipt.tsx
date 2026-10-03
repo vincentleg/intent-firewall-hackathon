@@ -1,4 +1,4 @@
-import { displayVerdict, outcomes, type Decision } from "../lib/decision";
+import { displayVerdict, isRecord, outcomes, type Decision } from "../lib/decision";
 import { decisionInput, scenarios, type Purpose, type ScenarioId } from "../lib/demo";
 
 type Props = { result: Decision; purpose: Purpose; scenarioId: ScenarioId };
@@ -8,6 +8,8 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
   const hard = purpose === "Client meeting";
   const input = decisionInput(purpose, scenarioId);
   const trays = scenarioId === "trays";
+  const intent = isRecord(input.intent) ? input.intent : {};
+  const hardConstraints = ["$60 maximum", "At least 4 usable servings", ...(hard ? ["Delivery by 12:30 PM"] : []), ...(purpose === "Four separately labeled desk meals" ? ["Individual packaging", "Four separate labels"] : []), ...(!trays ? ["Same sparkling water"] : [])];
   return (
     <details className="decision-details" key={`${purpose}-${scenarioId}-${result.verdict}`}>
       <summary>How this was decided <span>Intent Record + policy + Instinct</span></summary>
@@ -30,10 +32,12 @@ export default function DecisionReceipt({ result, purpose, scenarioId }: Props) 
             <span className="field-label">AGENT CONTEXT</span>
             <dl className="receipt-facts">
               <div><dt>What the customer meant</dt><dd>{typeof input.intent === "object" ? String(input.intent.preferencesContext) : purpose}</dd></div>
-              <div><dt>Important constraints</dt><dd>{result.constraintsPreserved.length ? result.constraintsPreserved.join(" · ") : "Preservation not established"}</dd></div>
+              <div><dt>Hard constraints</dt><dd>{hardConstraints.join(" · ")}</dd></div>
+              <div><dt>Soft preferences</dt><dd>{[...(Array.isArray(intent.softPreferences) ? intent.softPreferences : []), ...(!hard ? ["12:30 PM target; 15-minute flexibility"] : [])].join(" · ") || "None reported"}</dd></div>
+              <div><dt>Constraints preserved</dt><dd>{result.constraintsPreserved.length ? result.constraintsPreserved.join(" · ") : "Preservation not established"}</dd></div>
               <div><dt>Constraints at risk</dt><dd>{result.constraintsAtRisk.length ? result.constraintsAtRisk.join(" · ") : "No identified hard constraint at risk"}</dd></div>
               <div><dt>Verified facts</dt><dd>{result.verifiedFacts.length ? result.verifiedFacts.join(" · ") : "No verified change facts"}</dd></div>
-              {result.unverifiedFacts.length > 0 && <div><dt>Unverified facts</dt><dd>{result.unverifiedFacts.join(" · ")}</dd></div>}
+              <div><dt>Unverified facts</dt><dd>{result.unverifiedFacts.length ? result.unverifiedFacts.join(" · ") : "None reported"}</dd></div>
             </dl>
           </div>
           {result.orchestration?.mode === "managed_agent" && <p className="receipt-note">Merchant agent session: ZooWork Managed Agent · {result.orchestration.resumed ? "resumed order context" : "new order context"} · {result.orchestration.history?.length ?? 0} recent decisions</p>}

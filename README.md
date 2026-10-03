@@ -2,73 +2,60 @@
 
 **Same change. Different intent.**
 
-A packaging substitution and a 15-minute delivery delay should not always trigger the same approval flow. Intent Firewall represents the restaurant’s agent: it evaluates merchant changes against the customer’s purpose and interrupts the customer only when their intent is at risk.
+[Try the live demo](https://intent-firewall-hackathon.vercel.app)
 
-[Open the live demo](https://intent-firewall-hackathon.vercel.app)
+Restaurants routinely need to change an order. Asking the customer about every harmless substitution creates unnecessary interruptions; approving every change ignores what the customer meant.
 
-## Try the key moment
+Intent Firewall evaluates the merchant’s change against the shopper’s Intent Record. It resolves harmless changes automatically and escalates when purpose or hard constraints are at risk.
 
-1. Select **Client meeting** and **A little later**, then **Run live decision**: the 12:30 → 12:45 delivery misses a hard deadline, so the final verdict is **ASK**.
-2. Switch to **Casual team lunch** and run the same change: timing is flexible, so **AUTO-ADAPT** is allowed if Instinct selects it with at least 80% confidence.
-3. The comparison shows both actual live results. Open **How this was decided** for the receipt.
+## The two-minute demo
 
-| Merchant change | Context | Expected behavior |
-| --- | --- | --- |
-| 4 waters → 2 twin-packs of the same water | Four usable servings, $1 cheaper, verified | AUTO_ADAPT if confidence permits |
-| Delivery 12:30 → 12:45 | Client meeting; hard deadline | ASK; customer may approve |
-| Same delivery delay | Casual lunch; soft target, 15-minute flexibility | Live result; AUTO_ADAPT if confidence permits |
-| Kitchen says ready, scan missing | Unverified physical state | HOLD |
+1. **Client meeting + A little later:** delivery moves from 12:30 to 12:45. The hard deadline is missed → **ASK**.
+2. Switch to **Casual team lunch**, keeping the same delay. Flexible timing allows **AUTO-ADAPT**, subject to the live confidence threshold.
+3. Choose **Bowls or family trays?** Shared team lunch accepts two verified two-person trays; **four separately labeled desk meals** requires individual packaging and labels → **ASK**.
+4. **A different package** preserves four waters and lowers the price. **Ready. Or is it?** has a missing scan → **HOLD**.
 
-ASK and HOLD remain real live outcomes; the UI never substitutes a canned answer. BLOCK is supported for incompatible changes but is not forced by these three scenarios.
+The comparison displays actual API results. No verdict is fabricated or replayed. Automatic adaptation requires a live AUTO_ADAPT choice with at least 80% confidence; live confidence can vary.
 
 ## Architecture
 
-Shopper agent Intent Record → restaurant change → `POST /api/decision` → ZooWork Instinct → deterministic guardrails → final verdict and receipt.
+Shopper Agent → Intent Record → Restaurant Intent Firewall → ZooWork Instinct → Resolve or Escalate.
 
-- Next.js 16, React 19, TypeScript and CSS/Tailwind; no additional runtime libraries. Production builds use the supported webpack compiler to avoid a local Turbopack subprocess port-binding failure.
-- Instinct evaluates exactly one choice question over AUTO_ADAPT, ASK, HOLD and BLOCK. It receives customer purpose, constraints, party size, budget, original order, proposed change, merchant attributes and verification state. See the [official API contract](https://api.zoowork.ai/docs/).
-- The server reads `INSTINCT_API_KEY` and calls the free preview endpoint `https://api.zoowork.ai/v1/systemone` with model `instinct`. The key never enters client code.
-- Guardrails require HOLD for unverified state, ASK for a missed hard deadline, and verified state plus at least 0.80 confidence for AUTO_ADAPT. An unreadable hard deadline disables automatic adaptation. Soft deadlines do not trigger the hard-deadline override.
-- The API preserves `instinctVerdict`, `probabilities` and `raw`; it adds final `verdict`, `policyReason` and structured `policyChecks`. The UI shows a collapsed receipt rather than internal JSON.
-- Requests have a 30-second upstream timeout, a 40-second browser timeout, cancellation on selection changes, response validation and an explicit retry state. Nothing is cached or fabricated as a live decision.
-- The counter counts each successfully adapted purpose/scenario combination once per page session. Re-running that same demo change does not increment it again.
+The Next.js server’s `POST /api/decision` sends one choice question to ZooWork Instinct at `https://api.zoowork.ai/v1/systemone`, using model `instinct`. Context includes purpose, hard constraints, soft preferences, original order, merchant change and verification facts. Instinct returns probabilities for AUTO_ADAPT, ASK, HOLD and BLOCK.
+
+A deterministic policy layer remains authoritative:
+
+- Unverified physical state → HOLD.
+- Missed hard deadline → ASK, allowing the customer to approve.
+- Hard budget, usable quantity, product identity and required packaging/labels take precedence over soft preferences.
+- AUTO_ADAPT requires verified state and confidence ≥ 0.80.
+
+The expandable receipt separates the model’s original choice from the final policy decision and shows evidence and constraints. Requests have timeouts, cancellation, double-click protection and visible retry states. The counter counts each adapted purpose/scenario combination once per page session.
+
+**Production uses direct Instinct.** Managed-agent code remains experimental local work and is disabled in production; it is not part of the live architecture.
 
 ## Local setup
 
-Use Node.js 22+ and npm.
+Use Node.js 22+ and npm:
 
 ```bash
 npm ci
-```
-
-Create `.env.local` with the server-only environment variable **INSTINCT_API_KEY**, set to your free preview key. Do not prefix it with `NEXT_PUBLIC_` or commit the file. Configure the same variable in your deployment environment.
-
-```bash
 npm run dev
 ```
 
-Open http://localhost:3000.
+Before running, create ignored `.env.local` with the server-only **INSTINCT_API_KEY**. Never use a `NEXT_PUBLIC_` key or commit credentials. **USE_ZOOWORK_AGENT** controls experimental local orchestration and should remain disabled. **ZOOWORK_API_KEY** and **ZOOWORK_AGENT_ID** are only relevant to that local experiment; the live demo does not require them.
+
+Open http://localhost:3000. Validate with:
 
 ```bash
-npm test
 npm run lint
 npx tsc --noEmit --incremental false
+npm test
 npm run build
-npm start
 ```
 
-The tests use mocked upstream responses; they require neither credentials nor network access. Real demo runs require a working Instinct key.
+Tests mock upstream services and require no credentials. Live decisions need a valid Instinct key.
 
-## Scope and trust
+## Scope
 
-Merchant attributes, orders and verification states are simulated scenario facts. Instinct decisions and probabilities are live. The demo evaluates changes; it does not actually change an order, send a notification or execute a refund.
-
-The API accepts caller-supplied Intent Records; it is not an authenticated merchant attestation service. Clock-only deadlines assume the same delivery day. Supply explicit ISO timestamps with UTC offsets for dated comparisons. Production order processing would need authenticated records, durable decision history and infrastructure-level abuse controls. Those integrations are intentionally outside this gallery demo.
-
-### Optional ZooWork merchant orchestration
-
-The direct Instinct engine remains canonical. Managed-agent orchestration is **off by default** (`USE_ZOOWORK_AGENT=false`). Set server-only `ZOOWORK_API_KEY`, then run `node scripts/setup-merchant-agent.mjs` once. This provisions one **Intent Firewall Merchant Agent**, starts it, and saves `ZOOWORK_AGENT_ID` in ignored `.env.local` without enabling the flag. Node 20+ is required; the setup script's environment-file loading requires Node 20.12+.
-
-When enabled, each order gets a persistent ZooWork session. The agent receives its Intent Record and merchant event and requests the application-executed `evaluate_intent_firewall` tool. The backend supplies immutable request facts to the existing Instinct/policy engine and records its exact result in the session. The UI receives that canonical result, a signed order-bound resume checkpoint, and the last five decision summaries. The same browser resumes the session for subsequent changes to that order; refreshing clears its in-memory resume handles. ZooWork's durable transcript retains the full event and tool-result history.
-
-An agent failure or timeout uses the direct engine with an explicit fallback receipt. A request caches its evaluation so fallback cannot call Instinct twice after a tool already ran. Invalid/expired resume handles also fall back instead of trusting arbitrary session IDs. No order is actually changed. Do not enable production until its server-side key and agent ID are configured and the managed path is validated there. No customer authentication or production order storage is implemented by this demo.
+Restaurant orders, merchant attributes and verification are simulated scenario facts; model decisions and probabilities are live. The demo evaluates changes without modifying orders or sending notifications. Caller-supplied records are not authenticated merchant attestations. Clock-only deadlines assume the same delivery day. Production order execution would require authenticated evidence, durable history and abuse controls.
