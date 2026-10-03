@@ -450,3 +450,45 @@ select:focus-visible { outline: 3px solid #759f39; outline-offset: 3px; }
   .capture-takeaway { font-size: 15px; }
   .shopper-stage { padding: 22px; }
 }
+
+/* Narration follows the live state; it never overlays the order or verdict. */
+.cinematic-intro { min-height: 370px; display: flex; flex-direction: column; justify-content: center; padding: 30px 0; animation: verdict-enter .3s ease-out; }
+.cinematic-intro h2 { font-size: clamp(27px, 3vw, 42px); font-weight: 550; letter-spacing: -1.3px; max-width: 850px; line-height: 1.2; margin: 18px 0; }
+.cinematic-intro p { font-size: 16px; line-height: 1.7; color: #64775b; max-width: 770px; }
+.intro-visual { margin-top: 28px; color: var(--green); font-size: 13px; font-weight: 550; line-height: 1.8; }
+.content-hidden { display: none; }
+.narration { max-width: 900px; background: #edf2e7; border-left: 3px solid #8ba865; padding: 12px 18px; margin: 16px 0; border-radius: 0 8px 8px 0; animation: verdict-enter .25s ease-out; }
+.narration p { font-size: 14px; line-height: 1.65; color: #344f2e; }
+.narration > span { font-size: 11px; color: #728366; display: block; margin-top: 5px; }
+.cinematic-layout .live-workbench { display: grid; grid-template-columns: 1.9fr 1.1fr; gap: 16px; align-items: stretch; }
+.cinematic-layout .order-workspace { grid-template-columns: 1.1fr .9fr; gap: 8px; margin-bottom: 0; }
+.cinematic-layout .order-card { padding: 18px; }
+.cinematic-layout .order-card h2 { font-size: 18px; }
+.cinematic-layout .merchant-event { padding: 16px 8px; }
+.cinematic-layout .merchant-event h2 { font-size: 18px; }
+.cinematic-layout .merchant-event .focused-change { font-size: 20px; }
+.cinematic-layout .focused-result { padding: 18px; min-height: 0; }
+.cinematic-layout .final-verdict { font-size: clamp(32px, 3vw, 46px); letter-spacing: -1.5px; }
+.cinematic-layout .waiting-title, .cinematic-layout .loading-title { font-size: 26px; }
+.cinematic-layout .intelligence-checks { gap: 6px; font-size: 11px; }
+.cinematic-layout .outcome-strip { margin-top: 18px; padding-top: 14px; }
+.capture-entry { font-size: 11px; color: #74846b; }
+.end-card { min-height: 100vh; max-width: 950px; margin: auto; padding: 55px 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; }
+.end-mark { width: 56px; height: 60px; font-size: 42px; }
+.end-card h1 { font-size: clamp(38px, 5vw, 64px); line-height: 1.1; margin: 0; }
+.end-card h1 br { display: block; }
+.end-card h1 > span { margin-left: 0; }
+.end-card > p { font-size: 17px; line-height: 1.7; color: #59704e; }
+.end-card .mode-actions { justify-content: center; margin: 10px 0 0; }
+.end-card .end-narration { font-size: 12px; max-width: 670px; color: #77876c; }
+@media (max-width: 1050px) { .cinematic-layout .live-workbench { grid-template-columns: 1fr; } .cinematic-layout .focused-result { min-height: 200px; } .cinematic-layout .final-verdict { font-size: 48px; } }
+@media (max-width: 650px) {
+  .cinematic-layout .order-workspace { grid-template-columns: 1fr; }
+  .cinematic-layout .merchant-event { padding: 18px 4px; }
+  .narration { padding: 12px 14px; }
+  .narration p { font-size: 13px; }
+  .cinematic-intro { min-height: 340px; }
+  .cinematic-intro p { font-size: 14px; }
+  .cinematic-layout .final-verdict { font-size: 44px; }
+  .end-card > p { font-size: 15px; }
+}

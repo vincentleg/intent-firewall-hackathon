@@ -10,12 +10,14 @@ Intent Firewall evaluates the merchant’s change against the shopper’s Intent
 
 ## The two-minute demo
 
-1. Click **Run live order demo**. It evaluates a 12:30 → 12:45 delay for a client meeting, then automatically changes only the purpose to casual team lunch and evaluates again. The live comparison reveals **ASK → AUTO-ADAPT** when confidence permits.
+1. Click **Run live demo**. It evaluates a 12:30 → 12:45 delay for a client meeting, then automatically changes only the purpose to casual team lunch and evaluates again. The live comparison reveals **ASK → AUTO-ADAPT** when confidence permits.
 2. **Replay demo** runs fresh requests. **Pause/Resume** holds the presentation without repeating requests. **Restart** cancels and restarts the sequence; **Reset** clears results. A failed request stops the demo and offers **Retry decision**.
 3. Choose **Explore manually** for compact purpose/change selectors. Test bowls → family trays with shared lunch versus separately labeled desk meals; individual packaging and labels are hard requirements for the latter.
 4. Package changes preserve quantity and lower the price. Missing physical verification requires **HOLD**.
 
-The guided story takes about 37 seconds with responsive upstream calls; slower calls extend it.
+Text narration follows each state, the final comparison leads into a stable end card, and the eight-step capture mode remains available for manual presentation.
+
+The guided story takes about 39 seconds including a short context intro with responsive upstream calls; slower calls extend it.
 The comparison displays actual API results. No verdict is fabricated or replayed. Automatic adaptation requires a live AUTO_ADAPT choice with at least 80% confidence; live confidence can vary.
 
 ## Architecture
